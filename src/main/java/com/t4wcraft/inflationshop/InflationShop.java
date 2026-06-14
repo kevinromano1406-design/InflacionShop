@@ -13,7 +13,6 @@ import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.bukkit.event.inventory.InventoryClickEvent;
 import org.bukkit.inventory.Inventory;
-import org.bukkit.inventory.ItemStack;
 import org.bukkit.plugin.RegisteredServiceProvider;
 import org.bukkit.plugin.java.JavaPlugin;
 
@@ -29,13 +28,21 @@ public class InflationShop extends JavaPlugin implements Listener, CommandExecut
     public void onEnable() {
         saveDefaultConfig();
         loadConfigValues();
+        
         if (!setupEconomy()) {
             getLogger().severe("¡Vault no encontrado, desactivando plugin!");
             getServer().getPluginManager().disablePlugin(this);
             return;
         }
+        
         getServer().getPluginManager().registerEvents(this, this);
-        Objects.requireNonNull(getCommand("ishop")).setExecutor(this);
+        
+        // CORRECCIÓN: Comprobamos si el comando existe antes de registrarlo
+        if (getCommand("ishop") != null) {
+            getCommand("ishop").setExecutor(this);
+        } else {
+            getLogger().severe("¡ERROR: El comando 'ishop' no está definido en plugin.yml!");
+        }
     }
 
     private boolean setupEconomy() {
@@ -64,7 +71,6 @@ public class InflationShop extends JavaPlugin implements Listener, CommandExecut
         if (event.getView().getTitle().equals(menuTitle)) event.setCancelled(true);
     }
 
-    // Clase interna para evitar errores de compilación
     private static class ShopItem {
         public ShopItem() {}
     }
