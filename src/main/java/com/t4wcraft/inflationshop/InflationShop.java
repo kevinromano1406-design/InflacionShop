@@ -26,18 +26,31 @@ public class InflationShop extends JavaPlugin implements Listener, CommandExecut
     }
 
     private void loadItems() {
-        prices.put(Material.DIAMOND, 100.0);
-        prices.put(Material.IRON_INGOT, 50.0);
-        prices.put(Material.DIAMOND_HELMET, 500.0);
-        prices.put(Material.WHEAT, 10.0);
-        prices.put(Material.SPAWNER, 5000.0);
+        prices.clear();
+        // MINERALES
+        prices.put(Material.DIAMOND, 150.0);
+        prices.put(Material.GOLD_INGOT, 80.0);
+        prices.put(Material.IRON_INGOT, 40.0);
+        prices.put(Material.COAL, 10.0);
+        // BLOQUES
+        prices.put(Material.STONE, 5.0);
+        prices.put(Material.OAK_LOG, 15.0);
+        prices.put(Material.OBSIDIAN, 200.0);
+        // ARMADURAS
+        prices.put(Material.DIAMOND_CHESTPLATE, 1200.0);
+        prices.put(Material.IRON_CHESTPLATE, 400.0);
+        // FARMING
+        prices.put(Material.WHEAT, 5.0);
+        prices.put(Material.CARROT, 5.0);
+        // SPAWNERS
+        prices.put(Material.SPAWNER, 10000.0);
     }
 
     @Override
     public boolean onCommand(CommandSender sender, Command cmd, String label, String[] args) {
         if (args.length > 0 && args[0].equalsIgnoreCase("reload")) {
             loadItems();
-            sender.sendMessage(ChatColor.GREEN + "¡Tienda recargada!");
+            sender.sendMessage(ChatColor.GREEN + "¡Tienda recargada con todos los precios!");
             return true;
         }
         if (sender instanceof Player) openShop((Player) sender);
@@ -45,16 +58,19 @@ public class InflationShop extends JavaPlugin implements Listener, CommandExecut
     }
 
     private void openShop(Player p) {
-        Inventory inv = Bukkit.createInventory(null, 27, ChatColor.DARK_BLUE + "Tienda T4WCraft");
-        prices.forEach((mat, price) -> {
-            ItemStack item = new ItemStack(mat);
+        Inventory inv = Bukkit.createInventory(null, 54, ChatColor.DARK_RED + "Tienda Oficial T4WCraft");
+        for (Map.Entry<Material, Double> entry : prices.entrySet()) {
+            ItemStack item = new ItemStack(entry.getKey());
             ItemMeta meta = item.getItemMeta();
-            meta.setDisplayName(ChatColor.GOLD + mat.name().replace("_", " "));
-            List<String> lore = Arrays.asList(ChatColor.YELLOW + "Precio: $" + price, ChatColor.GRAY + "Izq: Comprar | Der: Vender");
-            meta.setLore(lore);
+            meta.setDisplayName(ChatColor.AQUA + entry.getKey().name().replace("_", " "));
+            meta.setLore(Arrays.asList(
+                ChatColor.YELLOW + "Precio Compra: $" + String.format("%.2f", entry.getValue()),
+                ChatColor.RED + "Precio Venta: $" + String.format("%.2f", entry.getValue() * 0.5),
+                ChatColor.GRAY + "Izq: Comprar | Der: Vender"
+            ));
             item.setItemMeta(meta);
             inv.addItem(item);
-        });
+        }
         p.openInventory(inv);
     }
 
@@ -62,26 +78,24 @@ public class InflationShop extends JavaPlugin implements Listener, CommandExecut
     public void onInventoryClick(InventoryClickEvent e) {
         if (!e.getView().getTitle().contains("Tienda")) return;
         e.setCancelled(true);
-        if (e.getCurrentItem() == null) return;
+        if (e.getCurrentItem() == null || e.getCurrentItem().getType() == Material.AIR) return;
         
         Player p = (Player) e.getWhoClicked();
         Material mat = e.getCurrentItem().getType();
         if (!prices.containsKey(mat)) return;
 
         double price = prices.get(mat);
-        if (e.isLeftClick()) { // COMPRA
+        if (e.isLeftClick()) {
             if (econ.getBalance(p) >= price) {
                 econ.withdrawPlayer(p, price);
                 p.getInventory().addItem(new ItemStack(mat));
-                prices.put(mat, price * 1.05); // Inflación 5%
+                prices.put(mat, price * 1.05); // Inflación
                 p.sendMessage(ChatColor.GREEN + "Compraste " + mat.name() + " por $" + price);
             }
-        } else if (e.isRightClick()) { // VENTA
-            if (p.getInventory().contains(mat)) {
-                p.getInventory().removeItem(new ItemStack(mat, 1));
-                econ.depositPlayer(p, price * 0.5);
-                p.sendMessage(ChatColor.RED + "Vendiste " + mat.name() + " por $" + (price * 0.5));
-            }
+        } else if (e.isRightClick()) {
+            p.getInventory().removeItem(new ItemStack(mat, 1));
+            econ.depositPlayer(p, price * 0.5);
+            p.sendMessage(ChatColor.RED + "Vendiste " + mat.name() + " por $" + (price * 0.5));
         }
         openShop(p);
     }
