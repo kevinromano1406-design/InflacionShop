@@ -1,3 +1,7 @@
 menu:
   title: "&8» &0&lTIENDA"
   size: 27
+
+# Aquí agregas los precios y la configuración de inflación
+precio_diamante: 100.0
+tasa_inflacion: 1.05
