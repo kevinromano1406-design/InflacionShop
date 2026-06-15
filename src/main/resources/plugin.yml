@@ -6,7 +6,8 @@ description: Plugin de economia dinamica con inflacion y deflacion para T4WCraft
 author: T4WCraft
 depend: [Vault]
 commands:
-ishop:
-description: Abre la tienda de economia dinamica de T4WCraft.
-aliases: [tienda, shop]
-permission: inflationshop.use
+  ishop:
+    description: Abre la tienda de economia dinamica de T4WCraft.
+    usage: /ishop
+    aliases: [tienda, shop]
+    permission: inflationshop.use
