@@ -20,6 +20,7 @@ public class InflationShop extends JavaPlugin implements Listener, CommandExecut
 
     @Override
     public void onEnable() {
+        saveDefaultConfig(); // Crea la carpeta y el config.yml
         setupEconomy();
         getServer().getPluginManager().registerEvents(this, this);
         getCommand("ishop").setExecutor(this);
@@ -28,21 +29,19 @@ public class InflationShop extends JavaPlugin implements Listener, CommandExecut
 
     private void loadData() {
         bloques.clear(); minerales.clear(); armaduras.clear();
-        // --- BLOQUES ---
-        bloques.put(Material.STONE, 5.0); bloques.put(Material.GRANITE, 5.0); bloques.put(Material.DIORITE, 5.0);
-        bloques.put(Material.ANDESITE, 5.0); bloques.put(Material.COBBLESTONE, 2.0); bloques.put(Material.OBSIDIAN, 500.0);
-        bloques.put(Material.DIRT, 1.0); bloques.put(Material.SAND, 1.0); bloques.put(Material.GRAVEL, 1.0);
-        bloques.put(Material.OAK_PLANKS, 5.0); bloques.put(Material.SPRUCE_PLANKS, 5.0); bloques.put(Material.SPAWNER, 5000.0);
         
-        // --- MINERALES ---
-        minerales.put(Material.IRON_INGOT, 50.0); minerales.put(Material.IRON_BLOCK, 450.0);
-        minerales.put(Material.GOLD_INGOT, 100.0); minerales.put(Material.GOLD_BLOCK, 900.0);
-        minerales.put(Material.DIAMOND, 200.0); minerales.put(Material.DIAMOND_BLOCK, 1800.0);
-        minerales.put(Material.EMERALD, 150.0); minerales.put(Material.NETHERITE_INGOT, 2000.0);
-
-        // --- ARMADURAS ---
-        armaduras.put(Material.IRON_CHESTPLATE, 200.0); armaduras.put(Material.DIAMOND_CHESTPLATE, 1000.0);
-        armaduras.put(Material.NETHERITE_CHESTPLATE, 5000.0); armaduras.put(Material.DIAMOND_HELMET, 500.0);
+        // Si no está en el config, usa el valor por defecto
+        bloques.put(Material.STONE, getConfig().getDouble("items.STONE", 5.0));
+        bloques.put(Material.OBSIDIAN, getConfig().getDouble("items.OBSIDIAN", 500.0));
+        bloques.put(Material.SPAWNER, getConfig().getDouble("items.SPAWNER", 5000.0));
+        
+        minerales.put(Material.IRON_INGOT, getConfig().getDouble("items.IRON_INGOT", 50.0));
+        minerales.put(Material.DIAMOND, getConfig().getDouble("items.DIAMOND", 200.0));
+        minerales.put(Material.NETHERITE_INGOT, getConfig().getDouble("items.NETHERITE_INGOT", 2000.0));
+        
+        armaduras.put(Material.IRON_CHESTPLATE, getConfig().getDouble("items.IRON_CHESTPLATE", 200.0));
+        armaduras.put(Material.DIAMOND_CHESTPLATE, getConfig().getDouble("items.DIAMOND_CHESTPLATE", 1000.0));
+        armaduras.put(Material.NETHERITE_CHESTPLATE, getConfig().getDouble("items.NETHERITE_CHESTPLATE", 5000.0));
     }
 
     private void openMenu(Player p, String cat) {
@@ -62,7 +61,9 @@ public class InflationShop extends JavaPlugin implements Listener, CommandExecut
 
     @Override
     public boolean onCommand(CommandSender sender, Command cmd, String label, String[] args) {
-        if (args.length > 0 && args[0].equalsIgnoreCase("reload")) { loadData(); sender.sendMessage("§aTienda recargada."); return true; }
+        if (args.length > 0 && args[0].equalsIgnoreCase("reload")) { 
+            reloadConfig(); loadData(); sender.sendMessage("§aTienda recargada desde config.yml."); return true; 
+        }
         if (sender instanceof Player) openMenu((Player) sender, "Bloques");
         return true;
     }
@@ -74,8 +75,8 @@ public class InflationShop extends JavaPlugin implements Listener, CommandExecut
         if (e.getCurrentItem() == null || e.getCurrentItem().getType() == Material.AIR) return;
         Player p = (Player) e.getWhoClicked();
         Material mat = e.getCurrentItem().getType();
-        
         Double price = bloques.getOrDefault(mat, minerales.getOrDefault(mat, armaduras.get(mat)));
+        
         if (price != null) {
             if (e.isLeftClick() && econ.getBalance(p) >= price) {
                 econ.withdrawPlayer(p, price);
